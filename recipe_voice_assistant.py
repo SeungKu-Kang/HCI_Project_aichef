@@ -1,4 +1,7 @@
 # recipe_voice_assistant.py
+import sys
+print(f"실행 중인 파이썬 경로: {sys.executable}")
+print(f"라이브러리 검색 경로: {sys.path}")
 
 import os
 import re

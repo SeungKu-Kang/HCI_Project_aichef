@@ -1,18 +1,4 @@
-# continuous_stt_tts.py
-# Google Cloud Streaming Speech-to-Text & Text-to-Speech with pyaudio 사용 예제
-# 사전 준비:
-# 1. Python 환경 설정
-#    - Python 3.8 이상 설치 확인
-#    - 가상환경 사용 권장
-# 2. Google Cloud 프로젝트 및 API 활성화
-#    - Speech-to-Text, Text-to-Speech API 활성화
-# 3. 서비스 계정 키 JSON 파일 설정:
-#    export GOOGLE_APPLICATION_CREDENTIALS="/path/to/key.json"
-# 4. OS별 오디오 드라이버 설치
-#    - Ubuntu/Debian: sudo apt-get install portaudio19-dev
-#    - macOS: brew install portaudio
-# 5. Python 라이브러리 설치:
-#    pip install google-cloud-speech google-cloud-texttospeech pyaudio wave
+# stt_tts_test_code.py
 
 import os
 import queue
@@ -29,7 +15,7 @@ CHANNELS = 1
 
 audio_queue = queue.Queue()
 
-# 마이크에서 캡처하여 큐에 저장
+# 마이크에서 들어오는 오디오를 큐에 저장
 class MicrophoneStream:
     def __init__(self):
         self.pa = pyaudio.PyAudio()
@@ -65,7 +51,9 @@ def request_generator():
             return
         yield speech.StreamingRecognizeRequest(audio_content=chunk)
 
-# 실시간 STT 및 TTS 처리
+# (이 파일만으로는 콘솔 STT+TTS 전체 흐름이 동작함)
+# 필요한 경우 하단의 예제 함수를 참조하세요.
+
 def streaming_transcribe_and_synthesize():
     stt_client = speech.SpeechClient()
     config = speech.RecognitionConfig(
@@ -103,11 +91,12 @@ def streaming_transcribe_and_synthesize():
                     voice=voice,
                     audio_config=audio_config
                 )
-                # 파일로 저장 및 재생
+                # WAV 파일로 저장 및 재생
                 output = "tts_output.wav"
                 with open(output, 'wb') as f:
                     f.write(tts_resp.audio_content)
                 os.system(f"aplay {output}")  # macOS: afplay
+                os.remove(output)
 
 if __name__ == '__main__':
     mic = MicrophoneStream()
