@@ -122,8 +122,6 @@ def generate_recipe(dish_name: str) -> str:
 2. [두 번째 단계 상세 설명]
 …
 
-**팁:** (없으면 "특별한 팁 없음")
-- [팁 내용]
 '''
         response = model.generate_content(prompt)
         return response.text.strip()
