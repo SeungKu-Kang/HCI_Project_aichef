@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Chef – Recipe</title>
+  <style>
+    /* ─── Overall Layout ─── */
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background-color: #f7f2ec; /* Creamy background to match index */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    /* Container Card */
+    .container {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 375px;
+      background-color: #ffffff;
+      border-radius: 20px;
+      box-shadow: 0 16px 32px rgba(0, 0, 0, 0.08);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      max-height: 95vh;
+    }
+
+    /* Header */
+    header {
+      background: linear-gradient(135deg, #556b2f 0%, #6b8e23 100%); /* Olive green */
+      color: #f7f2ec;
+      text-align: center;
+      padding: 20px 16px;
+      font-size: 1.5rem;
+      font-weight: bold;
+      letter-spacing: 1px;
+      position: relative;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+
+    /* Back Button */
+    #btnBack {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: #f7f2ec;
+      font-size: 1.5rem;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    #btnBack:hover {
+      opacity: 0.8;
+    }
+
+    header span {
+      display: inline-block;
+      transform: rotate(-5deg);
+      font-size: 2rem;
+      margin-right: 8px;
+    }
+
+    /* Main Content */
+    main {
+      flex: 1;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      overflow-y: auto;
+      background-color: #faf5ee; /* Slightly different cream tone */
+    }
+
+    /* Section Title */
+    .section-title {
+      margin: 0 0 8px 0;
+      font-size: 1.1rem;
+      color: #4b3f2f; /* Dark brown */
+      border-bottom: 2px solid #e0d6c3; /* Beige line */
+      padding-bottom: 4px;
+    }
+
+    /* List Area (Tools, Ingredients) */
+    .list-area {
+      background-color: #ffffff;
+      border: 1px solid #e0d6c3;
+      border-radius: 12px;
+      padding: 12px;
+      font-size: 1rem;
+      color: #4b3f2f;
+      list-style: none;
+      margin: 0;
+      max-height: 120px;
+      overflow-y: auto;
+      box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.03);
+    }
+    .list-area li {
+      margin-bottom: 6px;
+    }
+
+    /* Steps Area */
+    .steps-area {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      position: relative;
+    }
+    .steps-area li {
+      margin-bottom: 8px;
+      padding: 12px;
+      border-radius: 8px;
+      background-color: #ffffff;
+      transition: opacity 0.3s, background-color 0.3s;
+      color: #4b3f2f;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+    .steps-area li.faded {
+      opacity: 0.3;
+    }
+    .steps-area li.current {
+      opacity: 1;
+      background-color: #fff8e1; /* Soft yellow highlight */
+      font-weight: bold;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    /* “Show Image” Mic Button */
+    .mic-img-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      width: 60px;
+      height: 60px;
+    }
+    .mic-img-container button {
+      width: 60px;
+      height: 60px;
+      border: none;
+      border-radius: 50%;
+      background-color: #ff7043; /* Burnt orange */
+      color: #ffffff;
+      font-size: 1.5rem;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .mic-img-container button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+    }
+    .mic-img-container button:active {
+      transform: scale(0.95);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Modal Popup */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 2000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0, 0, 0, 0.5);
+      justify-content: center;
+      align-items: center;
+    }
+    .modal-content {
+      background-color: #ffffff;
+      padding: 12px;
+      border-radius: 8px;
+      max-width: 90%;
+      max-height: 80%;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    }
+    .modal-content img {
+      width: 100%;
+      height: auto;
+      display: block;
+      border-radius: 4px;
+    }
+    .modal-close {
+      position: absolute;
+      top: 16px;
+      right: 24px;
+      font-size: 1.5rem;
+      color: #ffffff;
+      cursor: pointer;
+    }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      font-size: 0.75rem;
+      color: #999;
+      padding: 8px 0;
+      background-color: #ffffff;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header with Back Button -->
+    <header>
+      <button id="btnBack" title="Back to Home">←</button>
+      <span>🥘</span> Recipe
+    </header>
+
+    <!-- Main Content -->
+    <main>
+      <!-- Tools Section -->
+      <div>
+        <h2 class="section-title">Tools</h2>
+        <ul id="toolsList" class="list-area"></ul>
+      </div>
+
+      <!-- Ingredients Section -->
+      <div>
+        <h2 class="section-title">Ingredients</h2>
+        <ul id="ingredientsList" class="list-area"></ul>
+      </div>
+
+      <!-- Steps Section -->
+      <div>
+        <h2 class="section-title">Steps</h2>
+        <ul id="stepsList" class="steps-area"></ul>
+      </div>
+    </main>
+
+    <!-- “Show Image” Mic Button -->
+    <div class="mic-img-container" id="micImgContainer">
+      <button id="btnShowImage">🎥</button>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+      &copy; 2025 AI Chef All rights reserved.
+    </footer>
+  </div>
+
+  <!-- Image Modal Popup -->
+  <div id="imageModal" class="modal">
+    <span class="modal-close" id="modalClose">&times;</span>
+    <div class="modal-content" id="modalContent">
+      <img src="" alt="Generated Image" id="modalImage" />
+    </div>
+  </div>
+
+  <script>
+    // Extract dish parameter from URL
+    const params = new URLSearchParams(window.location.search);
+    const dishName = params.get("dish") || "Unknown Dish";
+
+    // Back button: go to index.html
+    document.getElementById("btnBack").addEventListener("click", () => {
+      window.location.href = "/";
+    });
+
+    // Set header text
+    document.querySelector("header span + text")?.remove(); // Safeguard
+    document.getElementById("btnBack").nextSibling.textContent = ` Recipe for ${dishName}`;
+
+    // Fetch recipe data from the server
+    fetch(`/api/recipe?dish=${encodeURIComponent(dishName)}`)
+      .then(res => {
+        if (!res.ok) throw new Error("API Error");
+        return res.json();
+      })
+      .then(data => {
+        if (data.error) throw new Error(data.error);
+
+        // Populate Tools
+        const toolsList = document.getElementById("toolsList");
+        data.tools.forEach(tool => {
+          const li = document.createElement("li");
+          li.textContent = tool;
+          toolsList.appendChild(li);
+        });
+
+        // Populate Ingredients
+        const ingredientsList = document.getElementById("ingredientsList");
+        data.ingredients.forEach(ing => {
+          const li = document.createElement("li");
+          li.textContent = ing;
+          ingredientsList.appendChild(li);
+        });
+
+        // Populate Steps
+        const stepsList = document.getElementById("stepsList");
+        data.steps.forEach((step, idx) => {
+          const li = document.createElement("li");
+          li.textContent = `${idx + 1}. ${step}`;
+          li.dataset.stepIndex = idx;
+          if (idx === 0) {
+            li.classList.add("current");
+          } else {
+            li.classList.add("faded");
+          }
+          stepsList.appendChild(li);
+        });
+
+        // Text-to-Speech for first step
+        if (data.steps.length > 0) {
+          speakStep(data.steps[0]);
+        }
+
+        // Manage current step index
+        let currentStep = 0;
+        function nextStep() {
+          const items = document.querySelectorAll("#stepsList li");
+          if (currentStep < items.length - 1) {
+            items[currentStep].classList.remove("current");
+            items[currentStep].classList.add("faded");
+            currentStep++;
+            items[currentStep].classList.remove("faded");
+            items[currentStep].classList.add("current");
+            speakStep(data.steps[currentStep]);
+          }
+        }
+
+        // Automatically move to next step every 5 seconds (demo)
+        setInterval(() => nextStep(), 5000);
+
+        // Request image for current step
+        function requestImage() {
+          fetch(`/api/image?dish=${encodeURIComponent(dishName)}&step_index=${currentStep}`)
+            .then(res => {
+              if (!res.ok) throw new Error("Image API Error");
+              return res.json();
+            })
+            .then(imgData => {
+              if (imgData.url) {
+                openModal(imgData.url);
+              } else {
+                alert("Failed to generate image.");
+              }
+            })
+            .catch(err => {
+              console.error(err);
+              alert("Image generation failed.");
+            });
+        }
+
+        // Show Image button click
+        document.getElementById("btnShowImage").addEventListener("click", () => {
+          requestImage();
+        });
+
+        // Voice command for image: “show me an image”
+        let isListeningForImage = false;
+        let recognitionImg;
+        if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
+          const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+          recognitionImg = new SpeechRecognition();
+          recognitionImg.lang = 'en-US';
+          recognitionImg.interimResults = false;
+          recognitionImg.maxAlternatives = 1;
+
+          recognitionImg.addEventListener('result', (event) => {
+            const transcript = event.results[0][0].transcript.trim().toLowerCase();
+            console.log("Heard for image:", transcript);
+            if (/show me an image/i.test(transcript) || /show image/i.test(transcript)) {
+              requestImage();
+            }
+          });
+          recognitionImg.addEventListener('end', () => {
+            isListeningForImage = false;
+            document.getElementById("btnShowImage").style.backgroundColor = '#ff7043';
+          });
+        } else {
+          document.getElementById("btnShowImage").disabled = true;
+        }
+
+        // Start listening for image command on mousedown
+        document.getElementById("btnShowImage").addEventListener("mousedown", () => {
+          if (!recognitionImg) return;
+          if (!isListeningForImage) {
+            isListeningForImage = true;
+            recognitionImg.start();
+            document.getElementById("btnShowImage").style.backgroundColor = '#e65100';
+          }
+        });
+
+        // Modal functionality
+        const modal = document.getElementById("imageModal");
+        const modalImage = document.getElementById("modalImage");
+        const modalClose = document.getElementById("modalClose");
+        function openModal(url) {
+          modalImage.src = url;
+          modal.style.display = "flex";
+        }
+        modalClose.addEventListener("click", () => {
+          modal.style.display = "none";
+        });
+        modal.addEventListener("click", (e) => {
+          if (e.target === modal) modal.style.display = "none";
+        });
+
+      })
+      .catch(err => {
+        alert("Failed to load recipe: " + err.message);
+      });
+
+    // Text-to-Speech using Web SpeechSynthesis API
+    function speakStep(text) {
+      if (!window.speechSynthesis) return;
+      const utt = new SpeechSynthesisUtterance(text);
+      utt.lang = "en-US";
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(utt);
+    }
+  </script>
+</body>
+</html>

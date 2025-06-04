@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Chef – Speak Your Dish</title>
+  <style>
+    /* ─── 전체 배경 스타일 ─── */
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background-color: #f7f2ec; /* 크리미 배경 */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* 컨테이너: 중앙에 카드처럼 띄우기 */
+    .container {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 375px;
+      background-color: #ffffff;
+      border-radius: 20px;
+      box-shadow: 0 16px 32px rgba(0, 0, 0, 0.08);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      max-height: 95vh;
+    }
+
+    /* 헤더 */
+    header {
+      background: linear-gradient(135deg, #556b2f 0%, #6b8e23 100%); /* 올리브 그린 */
+      color: #f7f2ec;
+      text-align: center;
+      padding: 20px 16px;
+      font-size: 1.5rem;
+      font-weight: bold;
+      letter-spacing: 1px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+    header span {
+      display: inline-block;
+      transform: rotate(-5deg);
+      font-size: 2rem;
+      margin-right: 8px;
+    }
+
+    /* 메인 콘텐츠 */
+    main {
+      flex: 1;
+      padding: 24px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      overflow-y: auto;
+      background-color: #faf5ee; /* 부드러운 크림톤 */
+    }
+
+    /* 안내 박스 */
+    .instruction {
+      background-color: #fff8f0; /* 부드러운 크림 */
+      border: 1px solid #f0d9c2; /* 베이지 계열 테두리 */
+      border-radius: 12px;
+      padding: 16px;
+      font-size: 1rem;
+      color: #4b3f2f; /* 진한 갈색 텍스트 */
+      line-height: 1.5;
+    }
+    .instruction p:first-child::before {
+      content: "🍲 ";
+      font-size: 1.2rem;
+      margin-right: 4px;
+    }
+    .instruction p:nth-child(2)::before {
+      content: "🎙️ ";
+      font-size: 1.2rem;
+      margin-right: 4px;
+    }
+
+    /* 음성 인식 결과 표시 영역 */
+    .display-area {
+      background-color: #ffffff;
+      border: 1px solid #e0d6c3;
+      border-radius: 12px;
+      padding: 16px;
+      min-height: 80px;
+      font-size: 1rem;
+      color: #4b3f2f;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.03);
+    }
+    .display-area::before {
+      content: "🔍 ";
+      margin-right: 4px;
+    }
+
+    /* 버튼 그룹: 하단 중앙 고정 */
+    .button-group {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-top: auto;
+      padding-bottom: 24px;
+      background-color: #faf5ee;
+    }
+
+    /* 마이크 버튼 래퍼 */
+    .mic-container {
+      position: relative;
+      width: 120px;
+      height: 120px;
+    }
+
+    /* 동심원 물결 효과: 숨겨진 상태에서 .listening 시 보임 */
+    .mic-container .ripple {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 120px;
+      height: 120px;
+      margin: -60px 0 0 -60px;
+      border: 2px solid rgba(255, 140, 0, 0.5);
+      border-radius: 50%;
+      opacity: 0;
+      transform: scale(1);
+      pointer-events: none;
+    }
+    /* 첫 번째 링 */
+    .mic-container.listening .ripple:nth-child(1) {
+      animation: ripple 1.5s ease-out infinite;
+      animation-delay: 0s;
+    }
+    /* 두 번째 링 */
+    .mic-container.listening .ripple:nth-child(2) {
+      animation: ripple 1.5s ease-out infinite;
+      animation-delay: 0.5s;
+    }
+    /* 세 번째 링 */
+    .mic-container.listening .ripple:nth-child(3) {
+      animation: ripple 1.5s ease-out infinite;
+      animation-delay: 1s;
+    }
+
+    @keyframes ripple {
+      0% {
+        opacity: 0.6;
+        transform: scale(1);
+      }
+      100% {
+        opacity: 0;
+        transform: scale(2.5);
+      }
+    }
+
+    /* 마이크 버튼 */
+    .mic-container button {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      border: none;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #ff7043 0%, #ff8a65 100%); /* 버트 오렌지 계열 */
+      color: #ffffff;
+      font-size: 3rem;
+      cursor: pointer;
+      z-index: 2;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .mic-container button:hover {
+      transform: scale(1.05) rotate(-3deg);
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+    }
+    .mic-container button:active {
+      transform: scale(0.98) rotate(-2deg);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    /* 듣기 활성화 시 버튼 색상 변화 */
+    .mic-container.listening button {
+      background: linear-gradient(135deg, #e65100 0%, #ff7043 100%); /* 다소 진한 오렌지로 변화 */
+    }
+
+    /* 푸터 */
+    footer {
+      text-align: center;
+      font-size: 0.75rem;
+      color: #999;
+      padding: 8px 0;
+      background-color: #ffffff;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- ─── 헤더 ─── -->
+    <header>
+      <span>🥘</span> AI Chef
+    </header>
+
+    <!-- ─── 메인 콘텐츠 ─── -->
+    <main>
+      <!-- 1) 안내문 -->
+      <div class="instruction">
+        <p>Tap the microphone button and say “Tell me how to make kimchi jjim.”</p>
+        <p>After dish is recognized, you’ll be taken to the recipe screen.</p>
+      </div>
+
+      <!-- 2) 인식된 텍스트 표시 영역 -->
+      <div id="recognizedText" class="display-area">
+        Recognized voice input will appear here.
+      </div>
+    </main>
+
+    <!-- ─── 버튼 그룹 (하단 중앙) ─── -->
+    <div class="button-group">
+      <div class="mic-container" id="micContainer">
+        <!-- 동심원 링 요소 3개 -->
+        <div class="ripple"></div>
+        <div class="ripple"></div>
+        <div class="ripple"></div>
+        <!-- 마이크 버튼 -->
+        <button id="btnMic">🎤</button>
+      </div>
+    </div>
+
+    <!-- ─── 푸터 ─── -->
+    <footer>
+      &copy; 2025 AI Chef All rights reserved.
+    </footer>
+  </div>
+
+  <!-- ─── 자바스크립트 ─── -->
+  <script>
+    const micContainer = document.getElementById('micContainer');
+    const btnMic = document.getElementById('btnMic');
+    const recognizedText = document.getElementById('recognizedText');
+
+    let isListening = false;
+    let recognition;
+
+    // Web Speech API 지원 여부 확인
+    if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+      recognizedText.textContent = "Sorry, your browser does not support Speech Recognition.";
+      btnMic.disabled = true;
+    } else {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      recognition = new SpeechRecognition();
+      recognition.lang = 'en-US';
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+
+      recognition.addEventListener('result', (event) => {
+        const transcript = event.results[0][0].transcript.trim().toLowerCase();
+        recognizedText.textContent = `You said: "${transcript}"`;
+        const match = transcript.match(/^tell me how to make\s+(.+)$/i);
+        if (match && match[1]) {
+          const dish = match[1].trim();
+          window.location.href = `/recipe?dish=${encodeURIComponent(dish)}`;
+        } else {
+          recognizedText.textContent = `Unrecognized format. Please say "Tell me how to make [dish name]".`;
+        }
+      });
+
+      recognition.addEventListener('end', () => {
+        micContainer.classList.remove('listening');
+        isListening = false;
+      });
+    }
+
+    // 버튼 클릭 시 듣기 토글 및 동심원 물결 효과 활성화/비활성화
+    btnMic.addEventListener('click', () => {
+      if (!recognition) return;
+      if (!isListening) {
+        isListening = true;
+        micContainer.classList.add('listening');
+        recognizedText.textContent = "Listening… 🎧";
+        recognition.start();
+      } else {
+        recognition.stop();
+        micContainer.classList.remove('listening');
+        isListening = false;
+      }
+    });
+  </script>
+</body>
+</html>
